@@ -1,5 +1,7 @@
+import { useEffect, useState } from "react";
 import { useLocation, Link } from "wouter";
-import { LayoutDashboard, FolderOpen, Settings, Bell, LogOut, Newspaper, Building2, Landmark, ShieldCheck, Shield, CalendarDays, BookOpen, FileText, Coins, UserCheck, Lightbulb } from "lucide-react";
+import { useTheme } from "next-themes";
+import { LayoutDashboard, FolderOpen, Settings, Bell, LogOut, Newspaper, Building2, Landmark, ShieldCheck, Shield, CalendarDays, BookOpen, FileText, Coins, UserCog, Lightbulb, Palette, SlidersHorizontal, PanelLeft, ChevronRight, ArrowUpRight } from "lucide-react";
 import { getVersionString } from "@shared/version";
 import { GrantedLogo } from "@/components/granted-logo";
 import {
@@ -11,11 +13,15 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
+  SidebarMenuSub,
+  SidebarMenuSubItem,
+  SidebarMenuSubButton,
   SidebarFooter,
   SidebarHeader,
   SidebarSeparator,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useAuth } from "@/hooks/use-auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -37,11 +43,15 @@ function CreditBalanceBadge({ onClick }: { onClick: () => void }) {
 
   return (
     <Link href="/my-account?tab=abonament" onClick={onClick} data-testid="link-credit-balance">
-      <div className="flex items-center gap-2 px-3 py-2 mb-2 rounded-lg bg-sidebar-accent/50 border border-sidebar-border hover-elevate cursor-pointer">
+      <div
+        className="group/credit flex items-center gap-2 px-3 py-2 mb-2 rounded-lg bg-sidebar-accent/50 border border-sidebar-border hover-elevate cursor-pointer group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:gap-0"
+        title={`${data.creditBalance} credite — reîncarcă`}
+      >
         <Coins className="w-4 h-4 text-[hsl(48,100%,45%)] shrink-0" />
-        <span className="text-sm font-semibold text-sidebar-foreground" data-testid="text-credit-balance">
+        <span className="text-sm font-semibold text-sidebar-foreground group-data-[collapsible=icon]:hidden" data-testid="text-credit-balance">
           {data.creditBalance} credite
         </span>
+        <ArrowUpRight className="w-4 h-4 ml-auto text-[hsl(48,100%,45%)] opacity-60 transition-all group-hover/credit:opacity-100 group-hover/credit:translate-x-0.5 group-hover/credit:-translate-y-0.5 shrink-0 group-data-[collapsible=icon]:hidden" />
       </div>
     </Link>
   );
@@ -56,13 +66,18 @@ const navItems = [
   { title: "Proiecte", url: "/projects", icon: FolderOpen, testId: "projects" },
   { title: "Calendar", url: "/calendar", icon: CalendarDays, testId: "calendar" },
   { title: "Notificări", url: "/notifications", icon: Bell, testId: "notifications" },
-  { title: "Contul meu", url: "/my-account", icon: Settings, testId: "my-account" },
+  { title: "Contul meu", url: "/my-account", icon: UserCog, testId: "my-account" },
 ];
 
 export function AppSidebar() {
   const [location] = useLocation();
   const { user, logout } = useAuth();
-  const { setOpenMobile } = useSidebar();
+  const { setOpenMobile, toggleSidebar } = useSidebar();
+  const { resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  // Auriu (light) → yellow/white logo; Elegant (dark) → white logo on the dark rail.
+  const logoVariant = mounted && resolvedTheme === "dark" ? "white" : "gold";
 
   const { data: notifications } = useQuery<Notification[]>({
     queryKey: ["/api/notifications"],
@@ -80,17 +95,28 @@ export function AppSidebar() {
     : "?";
 
   const isActive = (url: string) => location === url || location.startsWith(url + "/");
+  const settingsActive = location.startsWith("/setari") || location === "/notification-settings";
 
   const handleNavClick = () => {
     setOpenMobile(false);
   };
 
   return (
-    <Sidebar variant="floating">
-      <SidebarHeader className="p-4 flex items-center justify-center">
-        <Link href="/dashboard" onClick={handleNavClick} data-testid="link-logo-home">
-          <GrantedLogo size="md" variant="gold" />
-        </Link>
+    <Sidebar variant="floating" collapsible="icon">
+      <SidebarHeader className="p-3">
+        <div className="flex items-center justify-between gap-2 group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:gap-1">
+          <Link href="/dashboard" onClick={handleNavClick} data-testid="link-logo-home" className="group-data-[collapsible=icon]:hidden">
+            <GrantedLogo size="md" variant={logoVariant} />
+          </Link>
+          <button
+            onClick={toggleSidebar}
+            data-testid="button-sidebar-collapse"
+            title="Restrânge / extinde meniul"
+            className="p-2 rounded-md text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors shrink-0"
+          >
+            <PanelLeft className="w-4 h-4" />
+          </button>
+        </div>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
@@ -142,6 +168,55 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
+        <SidebarSeparator />
+
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-xs uppercase tracking-wider text-muted-foreground/70">Setări</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <Collapsible defaultOpen={settingsActive} className="group/collapsible">
+                <SidebarMenuItem>
+                  <CollapsibleTrigger asChild>
+                    <SidebarMenuButton data-testid="button-nav-settings" tooltip="Setări">
+                      <Settings className="w-4 h-4" />
+                      <span>Setări</span>
+                      <ChevronRight className="ml-auto w-4 h-4 transition-transform group-data-[state=open]/collapsible:rotate-90" />
+                    </SidebarMenuButton>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <SidebarMenuSub>
+                      <SidebarMenuSubItem>
+                        <SidebarMenuSubButton asChild isActive={isActive("/setari/aspect")}>
+                          <Link href="/setari/aspect" onClick={handleNavClick} data-testid="link-nav-setari-aspect">
+                            <Palette className="w-4 h-4" />
+                            <span>Aspect</span>
+                          </Link>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                      <SidebarMenuSubItem>
+                        <SidebarMenuSubButton asChild isActive={isActive("/setari/panou")}>
+                          <Link href="/setari/panou" onClick={handleNavClick} data-testid="link-nav-setari-panou">
+                            <SlidersHorizontal className="w-4 h-4" />
+                            <span>Detalii panou</span>
+                          </Link>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                      <SidebarMenuSubItem>
+                        <SidebarMenuSubButton asChild isActive={isActive("/notification-settings")}>
+                          <Link href="/notification-settings" onClick={handleNavClick} data-testid="link-nav-setari-notificari">
+                            <Bell className="w-4 h-4" />
+                            <span>Setări notificări</span>
+                          </Link>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                    </SidebarMenuSub>
+                  </CollapsibleContent>
+                </SidebarMenuItem>
+              </Collapsible>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
         {adminCheck?.isSuperAdmin && (
           <>
             <SidebarSeparator />
@@ -181,12 +256,14 @@ export function AppSidebar() {
       </SidebarContent>
       <SidebarFooter className="p-3 pb-3">
         {user && <CreditBalanceBadge onClick={handleNavClick} />}
-        <div className="flex items-center gap-3 p-3 rounded-lg bg-sidebar-accent/50 border border-sidebar-border">
-          <Avatar className="w-9 h-9 ring-2 ring-[hsl(48,100%,50%)] shrink-0">
-            {user?.profileImage && <AvatarImage src={user.profileImage} alt="Profil" />}
-            <AvatarFallback className="text-xs font-semibold bg-sidebar-primary text-sidebar-primary-foreground">{initials}</AvatarFallback>
-          </Avatar>
-          <div className="flex-1 min-w-0 space-y-0.5">
+        <div className="flex items-center gap-3 p-3 rounded-lg bg-sidebar-accent/50 border border-sidebar-border group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:gap-1.5 group-data-[collapsible=icon]:p-1.5">
+          <Link href="/my-account" onClick={handleNavClick} title={`${user?.firstName ?? ""} ${user?.lastName ?? ""}`.trim()}>
+            <Avatar className="w-9 h-9 ring-2 ring-[hsl(48,100%,50%)] shrink-0 group-data-[collapsible=icon]:w-8 group-data-[collapsible=icon]:h-8 cursor-pointer">
+              {user?.profileImage && <AvatarImage src={user.profileImage} alt="Profil" />}
+              <AvatarFallback className="text-xs font-semibold bg-sidebar-primary text-sidebar-primary-foreground">{initials}</AvatarFallback>
+            </Avatar>
+          </Link>
+          <div className="flex-1 min-w-0 space-y-0.5 group-data-[collapsible=icon]:hidden">
             <p className="text-sm font-semibold truncate text-sidebar-foreground" data-testid="text-sidebar-username">
               {user?.firstName} {user?.lastName}
             </p>
@@ -198,7 +275,7 @@ export function AppSidebar() {
             <LogOut className="w-4 h-4" />
           </button>
         </div>
-        <p className="text-[10px] text-muted-foreground/50 text-center mt-1.5" data-testid="text-app-version">{getVersionString()}</p>
+        <p className="text-[10px] text-muted-foreground/50 text-center mt-1.5 group-data-[collapsible=icon]:hidden" data-testid="text-app-version">{getVersionString()}</p>
       </SidebarFooter>
     </Sidebar>
   );

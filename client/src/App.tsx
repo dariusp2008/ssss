@@ -1,4 +1,5 @@
 import { Switch, Route, useLocation } from "wouter";
+import { ThemeProvider, useTheme } from "next-themes";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -49,6 +50,8 @@ const PrivacyPolicyPage = lazy(() => import("@/pages/privacy-policy"));
 const TermsConditionsPage = lazy(() => import("@/pages/terms-conditions"));
 const CookiePolicyPage = lazy(() => import("@/pages/cookie-policy"));
 const NotificationSettingsPage = lazy(() => import("@/pages/notification-settings"));
+const AppearanceSettingsPage = lazy(() => import("@/pages/setari-aspect"));
+const DashboardVisibilitySettingsPage = lazy(() => import("@/pages/setari-panou"));
 const NotFound = lazy(() => import("@/pages/not-found"));
 
 function PageLoader() {
@@ -72,6 +75,8 @@ function AuthenticatedRouter() {
           <Route path="/projects/:id" component={ProjectWorkspacePage} />
           <Route path="/notifications" component={NotificationsPage} />
           <Route path="/notification-settings" component={NotificationSettingsPage} />
+          <Route path="/setari/aspect" component={AppearanceSettingsPage} />
+          <Route path="/setari/panou" component={DashboardVisibilitySettingsPage} />
           <Route path="/my-account" component={MyAccountPage} />
           <Route path="/settings" component={SettingsRedirect} />
           <Route path="/subscription" component={SubscriptionRedirect} />
@@ -101,8 +106,9 @@ function AuthenticatedRouter() {
 
 function HeaderLogo() {
   const { state } = useSidebar();
+  const { resolvedTheme } = useTheme();
   if (state === "expanded") return null;
-  return <GrantedLogo size="sm" variant="navy" />;
+  return <GrantedLogo size="sm" variant={resolvedTheme === "dark" ? "white" : "navy"} />;
 }
 
 function AuthenticatedLayout() {
@@ -219,13 +225,15 @@ function AppContent() {
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <AppContent />
-        <CookieConsentBanner />
-      </TooltipProvider>
-    </QueryClientProvider>
+    <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} themes={["light", "dark"]} disableTransitionOnChange>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <Toaster />
+          <AppContent />
+          <CookieConsentBanner />
+        </TooltipProvider>
+      </QueryClientProvider>
+    </ThemeProvider>
   );
 }
 

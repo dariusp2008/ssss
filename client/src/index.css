@@ -47,8 +47,8 @@
   --chart-3: 228 100% 19.6%;
   --chart-4: 160 84% 39%;
   --chart-5: 0 84.2% 60.2%;
-  --font-sans: 'Inter', sans-serif;
-  --font-serif: 'Playfair Display', serif;
+  --font-sans: 'Figtree', ui-sans-serif, system-ui, sans-serif;
+  --font-serif: 'Playfair Display', ui-serif, Georgia, serif;
   --font-mono: Menlo, monospace;
   --radius: 0.8rem;
   --shadow-2xs: 0px 2px 0px 0px hsl(9, 75%, 61% / 0.00);
@@ -61,6 +61,11 @@
   --shadow-2xl: 0px 2px 0px 0px hsl(9, 75%, 61% / 0.00);
   --tracking-normal: 0em;
   --spacing: 0.25rem;
+  /* Tailwind v4-style spacing steps consumed by ui/sidebar.tsx's icon-rail
+     width calc(); this project is on Tailwind v3, so define them explicitly
+     or the collapsed sidebar width falls back and never shrinks to a rail. */
+  --spacing-2: 0.5rem;
+  --spacing-4: 1rem;
 
 /* Fallback for older browsers */
   --sidebar-primary-border: hsl(from hsl(var(--sidebar-primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);

@@ -21,10 +21,15 @@ import {
   Search, Building2, TrendingUp, CheckCircle2, XCircle, ArrowRight,
   FileText, Users, Coins, Briefcase, AlertTriangle, Sparkles, Trash2,
   FileUp, FileMinus, BarChart3, Plus, ShieldCheck, Info, ChevronDown, ChevronUp,
-  ChevronLeft, ChevronRight,
+  ChevronLeft, ChevronRight, ChevronsDown,
   MapPin, Cpu, Brain, ArrowUpDown, RotateCcw,
 } from "lucide-react";
-import { Link } from "wouter";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useDashboardPrefs } from "@/lib/dashboard-prefs";
+import Folder from "@/components/reactbits/Folder";
+import CountUp from "@/components/reactbits/CountUp";
+import { CreateProjectWizard } from "@/components/create-project-wizard";
+import { Link, useLocation } from "wouter";
 import type { Company, FundingCall, ActiveProject } from "@shared/schema";
 import { getCompanyLegalState } from "@shared/company-legal-state";
 import { getActionCost, CREDIT_ACTION, type CreditCostRow } from "@/lib/credit-costs";
@@ -202,9 +207,25 @@ function calculateMatchScore(call: FundingCall, company: Company | null): MatchR
   return { call, score: finalScore, reasons, ...defaults, details: { structural: pct, semantic: 0 }, confidenceLevel };
 }
 
+// Progress-bar tint for "X tasks accomplished": moves through light colours as
+// completion rises — red → orange → yellow → green → turquoise → light blue.
+// Driven purely by the existing stats.avgProgress value (no new request).
+function progressBarColor(pct: number): string {
+  if (pct < 17) return "#f87171"; // red-400
+  if (pct < 34) return "#fb923c"; // orange-400
+  if (pct < 51) return "#fbbf24"; // amber-400 (yellow)
+  if (pct < 68) return "#4ade80"; // green-400
+  if (pct < 85) return "#2dd4bf"; // teal-400 (turquoise)
+  return "#38bdf8"; // sky-400 (light blue)
+}
+
 export default function DashboardPage() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const [dashPrefs] = useDashboardPrefs();
+  const [, navigate] = useLocation();
+  const [wizardOpen, setWizardOpen] = useState(false);
+  const [docsInsightsOpen, setDocsInsightsOpen] = useState(false);
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>("");
   const [searchFilter, setSearchFilter] = useState("");
   const [docsFilter, setDocsFilter] = useState("");
@@ -449,15 +470,9 @@ export default function DashboardPage() {
           </h1>
           <p className="text-xs sm:text-sm lg:text-xs text-muted-foreground">Gestionează aplicațiile tale pentru programe de finanțare.</p>
         </div>
-        <Link href="/companies">
-          <Button variant="outline" size="sm" className="border-[hsl(48,100%,50%)]/40 hover:bg-[hsl(48,100%,50%)]/10 hover:border-[hsl(48,100%,50%)] w-full sm:w-auto" data-testid="button-goto-companies">
-            <Building2 className="w-4 h-4 mr-2" />
-            Companiile mele ({companies?.length || 0})
-          </Button>
-        </Link>
       </div>
 
-      {!statsLoading && !companiesLoading && stats && (stats.companiesCount === 0 || (stats.eligibilityReportsCount || 0) === 0) && !localStorage.getItem("granted_onboarding_dismissed") && (
+      {dashPrefs.onboarding && !statsLoading && !companiesLoading && stats && (stats.companiesCount === 0 || (stats.eligibilityReportsCount || 0) === 0) && !localStorage.getItem("granted_onboarding_dismissed") && (
         <Card className="p-6 border-t-2 border-t-[hsl(228,100%,25%)] bg-gradient-to-br from-blue-50/50 to-white dark:from-blue-950/20 dark:to-background" data-testid="card-onboarding-wizard">
           <div className="flex items-start justify-between gap-4 mb-4">
             <div className="space-y-1">
@@ -526,70 +541,74 @@ export default function DashboardPage() {
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 lg:gap-2">
-          <Link href="/companies">
-            <Card className="p-4 lg:p-2.5 space-y-1 lg:space-y-0.5 border-t-2 border-t-[hsl(48,100%,50%)] cursor-pointer transition-shadow hover:shadow-md" data-testid="card-stat-companies">
-              <div className="flex items-center justify-between">
-                <div className="w-8 h-8 lg:w-6 lg:h-6 rounded-lg bg-[hsl(48,100%,50%)]/15 flex items-center justify-center">
-                  <Building2 className="w-4 h-4 lg:w-3 lg:h-3 text-[hsl(48,100%,45%)]" />
-                </div>
-                <ArrowRight className="w-3.5 h-3.5 lg:w-3 lg:h-3 text-muted-foreground/50" />
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 items-stretch">
+          {/* 1 — Companii (white folder) → add a company */}
+          <Card className="flex flex-col items-center justify-between gap-1 p-4 pt-7 min-h-[172px] border-t-2 border-t-chart-1 bg-muted/30 transition-shadow hover:shadow-md" data-testid="card-stat-companies">
+            <div className="flex-1 flex items-end justify-center">
+              <Folder size={0.7} color="#ffffff" onActivate={() => navigate("/companies")} aria-label="Adaugă o companie" />
+            </div>
+            <p className="text-2xl font-bold text-foreground" data-testid="text-stat-companies"><CountUp to={stats?.companiesCount ?? 0} duration={1} /></p>
+            <p className="text-xs text-muted-foreground text-center">Companii</p>
+          </Card>
+
+          {/* 2 — Proiecte active (blue folder) → create project wizard */}
+          <Card className="flex flex-col items-center justify-between gap-1 p-4 pt-7 min-h-[172px] border-t-2 border-t-chart-1 transition-shadow hover:shadow-md" data-testid="card-stat-projects">
+            <div className="flex-1 flex items-end justify-center">
+              <Folder size={0.7} color="#3B82F6" onActivate={() => setWizardOpen(true)} aria-label="Creează un proiect nou" />
+            </div>
+            <p className="text-2xl font-bold text-foreground" data-testid="text-stat-projects"><CountUp to={stats?.projectsCount ?? 0} duration={1} /></p>
+            <p className="text-xs text-muted-foreground text-center">Proiecte active</p>
+          </Card>
+
+          {/* 3 — Documente încărcate (green folder) → insights popup */}
+          <Card className="flex flex-col items-center justify-between gap-1 p-4 pt-7 min-h-[172px] border-t-2 border-t-chart-1 transition-shadow hover:shadow-md" data-testid="card-stat-documents-uploaded">
+            <div className="flex-1 flex items-end justify-center">
+              <Folder size={0.7} color="#22C55E" onActivate={() => setDocsInsightsOpen(true)} aria-label="Vezi detalii documente" />
+            </div>
+            <p className="text-2xl font-bold text-foreground" data-testid="text-stat-documents-uploaded"><CountUp to={stats?.documentsUploaded ?? 0} duration={1} /></p>
+            <p className="text-xs text-muted-foreground text-center">Documente încărcate</p>
+          </Card>
+
+          {/* 4 — Documente lipsă (red folder) → inactive until a project exists */}
+          <Card className={`flex flex-col items-center justify-between gap-1 p-4 pt-7 min-h-[172px] border-t-2 border-t-chart-1 transition-shadow ${(stats?.projectsCount ?? 0) === 0 ? "opacity-70" : "hover:shadow-md"}`} data-testid="card-stat-documents-missing">
+            <div className="flex-1 flex items-end justify-center">
+              <Folder
+                size={0.7}
+                color="#EF4444"
+                disabled={(stats?.projectsCount ?? 0) === 0}
+                onActivate={() => navigate("/projects")}
+                aria-label={(stats?.projectsCount ?? 0) === 0 ? "Creează un proiect întâi" : "Vezi documentele lipsă"}
+              />
+            </div>
+            <p className="text-2xl font-bold text-foreground" data-testid="text-stat-documents-missing"><CountUp to={stats?.documentsMissing ?? 0} duration={1} /></p>
+            <p className="text-xs text-muted-foreground text-center">{(stats?.projectsCount ?? 0) === 0 ? "Creează un proiect întâi" : "Documente lipsă"}</p>
+          </Card>
+
+          {/* 5 — Progres mediu (summary card, no folder) */}
+          <div className="relative">
+            <Card className="flex flex-col justify-between gap-2 p-4 min-h-[172px] border-t-2 border-t-chart-1 rounded-b-none" data-testid="card-stat-avg-progress">
+              <div className="w-9 h-9 rounded-lg bg-[hsl(48,100%,50%)]/15 flex items-center justify-center">
+                <BarChart3 className="w-4 h-4 text-[hsl(48,100%,45%)]" />
               </div>
-              <p className="text-2xl lg:text-lg font-bold text-[hsl(228,100%,19.6%)]" data-testid="text-stat-companies">{stats?.companiesCount ?? 0}</p>
-              <p className="text-xs lg:text-[10px] text-muted-foreground">Companii</p>
+              <div className="space-y-1">
+                <p className="text-2xl font-bold text-foreground" data-testid="text-stat-avg-progress"><CountUp to={stats?.avgProgress ?? 0} duration={1} />%</p>
+                <Progress
+                  value={Math.max(1, stats?.avgProgress ?? 0)}
+                  indicatorStyle={{ backgroundColor: progressBarColor(stats?.avgProgress ?? 0) }}
+                  className="h-1.5"
+                />
+                <p className="text-xs text-muted-foreground">Progres mediu</p>
+              </div>
             </Card>
-          </Link>
-          <Link href="/projects">
-            <Card className="p-4 lg:p-2.5 space-y-1 lg:space-y-0.5 border-t-2 border-t-[hsl(228,100%,25%)] cursor-pointer transition-shadow hover:shadow-md" data-testid="card-stat-projects">
-              <div className="flex items-center justify-between">
-                <div className="w-8 h-8 lg:w-6 lg:h-6 rounded-lg bg-[hsl(228,100%,19.6%)]/10 flex items-center justify-center">
-                  <Briefcase className="w-4 h-4 lg:w-3 lg:h-3 text-[hsl(228,100%,25%)]" />
-                </div>
-                <ArrowRight className="w-3.5 h-3.5 lg:w-3 lg:h-3 text-muted-foreground/50" />
-              </div>
-              <p className="text-2xl lg:text-lg font-bold text-[hsl(228,100%,19.6%)]" data-testid="text-stat-projects">{stats?.projectsCount ?? 0}</p>
-              <p className="text-xs lg:text-[10px] text-muted-foreground">Proiecte active</p>
-            </Card>
-          </Link>
-          <Link href="/projects">
-            <Card className="p-4 lg:p-2.5 space-y-1 lg:space-y-0.5 border-t-2 border-t-green-500 cursor-pointer transition-shadow hover:shadow-md" data-testid="card-stat-documents-uploaded">
-              <div className="flex items-center justify-between">
-                <div className="w-8 h-8 lg:w-6 lg:h-6 rounded-lg bg-green-500/10 flex items-center justify-center">
-                  <FileUp className="w-4 h-4 lg:w-3 lg:h-3 text-green-600" />
-                </div>
-                <ArrowRight className="w-3.5 h-3.5 lg:w-3 lg:h-3 text-muted-foreground/50" />
-              </div>
-              <p className="text-2xl lg:text-lg font-bold text-[hsl(228,100%,19.6%)]" data-testid="text-stat-documents-uploaded">{stats?.documentsUploaded ?? 0}</p>
-              <p className="text-xs lg:text-[10px] text-muted-foreground">Documente încărcate</p>
-            </Card>
-          </Link>
-          <Link href="/projects">
-            <Card className="p-4 lg:p-2.5 space-y-1 lg:space-y-0.5 border-t-2 border-t-orange-400 cursor-pointer transition-shadow hover:shadow-md" data-testid="card-stat-documents-missing">
-              <div className="flex items-center justify-between">
-                <div className="w-8 h-8 lg:w-6 lg:h-6 rounded-lg bg-orange-400/10 flex items-center justify-center">
-                  <FileMinus className="w-4 h-4 lg:w-3 lg:h-3 text-orange-500" />
-                </div>
-                <ArrowRight className="w-3.5 h-3.5 lg:w-3 lg:h-3 text-muted-foreground/50" />
-              </div>
-              <p className="text-2xl lg:text-lg font-bold text-[hsl(228,100%,19.6%)]" data-testid="text-stat-documents-missing">{stats?.documentsMissing ?? 0}</p>
-              <p className="text-xs lg:text-[10px] text-muted-foreground">Documente lipsă</p>
-            </Card>
-          </Link>
-          <Link href="/projects">
-            <Card className="p-4 lg:p-2.5 space-y-1 lg:space-y-0.5 border-t-2 border-t-[hsl(48,100%,50%)] cursor-pointer transition-shadow hover:shadow-md" data-testid="card-stat-avg-progress">
-              <div className="flex items-center justify-between">
-                <div className="w-8 h-8 lg:w-6 lg:h-6 rounded-lg bg-[hsl(48,100%,50%)]/15 flex items-center justify-center">
-                  <BarChart3 className="w-4 h-4 lg:w-3 lg:h-3 text-[hsl(48,100%,45%)]" />
-                </div>
-                <ArrowRight className="w-3.5 h-3.5 lg:w-3 lg:h-3 text-muted-foreground/50" />
-              </div>
-              <div className="space-y-1 lg:space-y-0.5">
-                <p className="text-2xl lg:text-lg font-bold text-[hsl(228,100%,19.6%)]" data-testid="text-stat-avg-progress">{stats?.avgProgress ?? 0}%</p>
-                <Progress value={stats?.avgProgress ?? 0} className="h-1.5" />
-              </div>
-              <p className="text-xs lg:text-[10px] text-muted-foreground">Progres mediu</p>
-            </Card>
-          </Link>
+            {/* smaller card attached under the progress card — double chevron */}
+            <div
+              className="absolute left-1/2 top-full z-10 flex w-1/3 -translate-x-1/2 items-center justify-center rounded-b-lg border border-t-0 border-card-border bg-card py-0.5 shadow-sm"
+              data-testid="tab-progress-more"
+              aria-hidden="true"
+            >
+              <ChevronsDown className="w-4 h-4 text-muted-foreground/70" />
+            </div>
+          </div>
         </div>
       )}
 
@@ -599,7 +618,7 @@ export default function DashboardPage() {
           query nou. Când nu există apeluri viitoare afișăm un empty state
           explicit (nu o secțiune lipsă) ca utilizatorul să știe că data e
           actuală, nu că secțiunea s-a încărcat eronat. */}
-      {(() => {
+      {dashPrefs.upcoming && (() => {
         const upcoming = (fundingCalls || [])
           .filter((c) => c?.lifecycleStage === "urmeaza" && c?.openDate)
           .sort((a, b) => new Date(a.openDate).getTime() - new Date(b.openDate).getTime())
@@ -669,6 +688,7 @@ export default function DashboardPage() {
         );
       })()}
 
+      {dashPrefs.matchEngine && (
       <div className="space-y-4 lg:space-y-3">
         <div className="flex items-center justify-between gap-4">
           <div className="space-y-0.5 lg:space-y-0">
@@ -892,6 +912,7 @@ export default function DashboardPage() {
           </>
         )}
       </div>
+      )}
       {matchSurvey.surveyConfig && (
         <MicroSurvey
           config={matchSurvey.surveyConfig}
@@ -900,6 +921,48 @@ export default function DashboardPage() {
           isSubmitting={matchSurvey.isSubmitting}
         />
       )}
+
+      {/* Real create-project wizard (opened by the blue folder card) */}
+      <CreateProjectWizard open={wizardOpen} onOpenChange={setWizardOpen} companies={companies} />
+
+      {/* Document-insights popup (opened by the green folder card) — real stats, cheer */}
+      <Dialog open={docsInsightsOpen} onOpenChange={setDocsInsightsOpen}>
+        <DialogContent className="max-w-md" data-testid="dialog-docs-insights">
+          <DialogHeader>
+            <DialogTitle className="font-serif flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-[hsl(48,100%,45%)]" />
+              Documentele tale
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="rounded-lg border bg-green-50/60 dark:bg-green-950/20 border-green-200 dark:border-green-800 p-3 text-center">
+                <FileUp className="w-5 h-5 text-green-600 mx-auto mb-1" />
+                <p className="text-2xl font-bold text-foreground">{stats?.documentsUploaded ?? 0}</p>
+                <p className="text-xs text-muted-foreground">Încărcate</p>
+              </div>
+              <div className="rounded-lg border bg-orange-50/60 dark:bg-orange-950/20 border-orange-200 dark:border-orange-800 p-3 text-center">
+                <FileMinus className="w-5 h-5 text-orange-500 mx-auto mb-1" />
+                <p className="text-2xl font-bold text-foreground">{stats?.documentsMissing ?? 0}</p>
+                <p className="text-xs text-muted-foreground">Lipsă</p>
+              </div>
+            </div>
+            <p className="text-sm text-center text-muted-foreground">
+              {(stats?.documentsMissing ?? 0) === 0 && (stats?.documentsUploaded ?? 0) > 0
+                ? "🎉 Felicitări! Ai încărcat toate documentele necesare. Continuă tot așa!"
+                : (stats?.documentsUploaded ?? 0) > 0
+                ? `Ai încărcat deja ${stats?.documentsUploaded} documente — foarte bine! Mai completează-le pe cele lipsă pentru dosare complete.`
+                : "Începe prin a încărca documentele în proiectele tale — fiecare pas te apropie de finanțare."}
+            </p>
+            <Link href="/projects">
+              <Button variant="outline" className="w-full" onClick={() => setDocsInsightsOpen(false)} data-testid="button-docs-insights-goto">
+                Mergi la proiecte
+                <ArrowRight className="w-4 h-4 ml-1.5" />
+              </Button>
+            </Link>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

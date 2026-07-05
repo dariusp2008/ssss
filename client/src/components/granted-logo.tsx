@@ -1,6 +1,6 @@
 interface GrantedLogoProps {
   size?: "sm" | "md" | "lg" | "xl";
-  variant?: "gold" | "navy" | "white";
+  variant?: "gold" | "navy" | "white" | "black";
   className?: string;
 }
 
@@ -15,11 +15,40 @@ const colorMap = {
   gold: { primary: "hsl(48,100%,50%)", secondary: "hsl(48,100%,40%)" },
   navy: { primary: "hsl(228,100%,19.6%)", secondary: "hsl(228,80%,30%)" },
   white: { primary: "#ffffff", secondary: "rgba(255,255,255,0.7)" },
+  black: { primary: "#111111", secondary: "rgba(0,0,0,0.6)" },
+};
+
+// Raster brand mark (professional lockup). When a generated asset is dropped in
+// here (light/dark PNGs in client/public/), GrantedLogo renders it in place of
+// the inline SVG across all call sites — no per-site change needed. Kept null
+// until the Higgsfield-generated logo is available.
+//   e.g. { light: "/logo-granted-light.png", dark: "/logo-granted-dark.png" }
+const LOGO_RASTER: { light: string; dark: string } | null = null;
+
+// Variant → which raster to use (dark-surface variants use the light-on-dark art).
+const rasterForVariant: Record<NonNullable<GrantedLogoProps["variant"]>, "light" | "dark"> = {
+  gold: "dark",
+  navy: "light",
+  white: "dark",
+  black: "light",
 };
 
 export function GrantedLogo({ size = "md", variant = "gold", className }: GrantedLogoProps) {
   const s = sizeMap[size];
   const c = colorMap[variant];
+
+  if (LOGO_RASTER) {
+    const src = LOGO_RASTER[rasterForVariant[variant]];
+    return (
+      <img
+        src={src}
+        alt="GRANTED"
+        data-testid="logo-granted"
+        className={className}
+        style={{ height: s.h + 4, width: "auto" }}
+      />
+    );
+  }
 
   const cx = s.w / 2;
   const cy = s.h / 2;
@@ -70,8 +99,8 @@ export function GrantedLogo({ size = "md", variant = "gold", className }: Grante
         dominantBaseline="central"
         textAnchor="middle"
         fill={c.primary}
-        fontFamily="'Inter', 'Arial Black', system-ui, sans-serif"
-        fontWeight="900"
+        fontFamily="'Figtree', system-ui, sans-serif"
+        fontWeight="800"
         fontSize={s.fontSize}
         letterSpacing="0.18em"
       >

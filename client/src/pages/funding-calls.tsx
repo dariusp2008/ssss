@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { AnimatedItem } from "@/components/reactbits/AnimatedList";
 import { Link, useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -128,11 +129,11 @@ function DeadlineCountdown({ deadline }: { deadline: string }) {
 // `toate` | `depunere_activa` | `urmeaza` | `expirat`. Pentru compat retroactivă
 // citim și vechiul param `status` (active → depunere_activa, expired → expirat,
 // all → toate) și migrăm la `stage` la următoarea scriere a URL.
-type StageFilter = "toate" | "depunere_activa" | "urmeaza" | "expirat";
+type StageFilter = "toate" | "in_consultare" | "depunere_activa" | "urmeaza" | "expirat";
 
 function readStageFromParams(p: URLSearchParams): StageFilter {
   const stage = p.get("stage");
-  if (stage === "toate" || stage === "depunere_activa" || stage === "urmeaza" || stage === "expirat") {
+  if (stage === "toate" || stage === "in_consultare" || stage === "depunere_activa" || stage === "urmeaza" || stage === "expirat") {
     return stage;
   }
   const status = p.get("status");
@@ -976,8 +977,9 @@ export default function FundingCallsPage() {
           }
         }}
       >
-        <TabsList className="w-full grid grid-cols-4 sm:w-auto sm:inline-grid">
+        <TabsList className="w-full grid grid-cols-3 sm:grid-cols-5 sm:w-auto sm:inline-grid">
           <TabsTrigger value="toate" data-testid="tab-stage-toate">Toate</TabsTrigger>
+          <TabsTrigger value="in_consultare" data-testid="tab-stage-in-consultare">În consultare</TabsTrigger>
           <TabsTrigger value="depunere_activa" data-testid="tab-stage-depunere">În depunere</TabsTrigger>
           <TabsTrigger value="urmeaza" data-testid="tab-stage-urmeaza">Urmează</TabsTrigger>
           <TabsTrigger value="expirat" data-testid="tab-stage-expirate">Expirate</TabsTrigger>
@@ -1499,7 +1501,7 @@ export default function FundingCallsPage() {
         <div className="flex flex-col sm:flex-row items-center justify-between gap-2" data-testid="pagination-top">
           <p className="text-xs text-muted-foreground" data-testid="text-page-info-top">
             Pagina {currentPage} din {totalPages}, apelul {(currentPage - 1) * pageSize + 1} la {Math.min(currentPage * pageSize, totalItems)} din {totalItems}
-            {stageFilter !== "toate" && ` · ${stageFilter === "depunere_activa" ? "În depunere" : stageFilter === "urmeaza" ? "Urmează" : "Expirate"}`}
+            {stageFilter !== "toate" && ` · ${stageFilter === "in_consultare" ? "În consultare" : stageFilter === "depunere_activa" ? "În depunere" : stageFilter === "urmeaza" ? "Urmează" : "Expirate"}`}
             {indexFilter && ` · ${indexFilter === "indexat" ? "Indexate" : indexFilter === "indexat-icp" ? "Gata pt. ICP" : "Neindexate"}`}
           </p>
           <div className="flex items-center gap-1.5">
@@ -1525,7 +1527,7 @@ export default function FundingCallsPage() {
       {totalPages <= 1 && totalItems > 0 && (
         <p className="text-xs text-muted-foreground">
           {totalItems} apelur{totalItems !== 1 ? "i" : ""}
-          {stageFilter !== "toate" && ` · ${stageFilter === "depunere_activa" ? "În depunere" : stageFilter === "urmeaza" ? "Urmează" : "Expirate"}`}
+          {stageFilter !== "toate" && ` · ${stageFilter === "in_consultare" ? "În consultare" : stageFilter === "depunere_activa" ? "În depunere" : stageFilter === "urmeaza" ? "Urmează" : "Expirate"}`}
           {indexFilter && ` · ${indexFilter === "indexat" ? "Indexate" : indexFilter === "indexat-icp" ? "Gata pt. ICP" : "Neindexate"}`}
         </p>
       )}
@@ -1538,13 +1540,12 @@ export default function FundingCallsPage() {
         </div>
       ) : filtered.length > 0 ? (
         <div className="space-y-4">
-          {filtered.map((call) => {
+          {filtered.map((call, idx) => {
             const expired = isExpired(call);
             return (
+              <AnimatedItem key={call.id} index={idx} onClick={() => setSelectedCall(call)}>
               <Card
-                key={call.id}
                 className={`p-5 space-y-4 cursor-pointer hover:border-primary/40 transition-colors ${expired ? "opacity-70" : ""}`}
-                onClick={() => setSelectedCall(call)}
                 data-testid={`card-call-${call.id}`}
               >
                 <div className="flex items-start justify-between gap-4">
@@ -1893,6 +1894,7 @@ export default function FundingCallsPage() {
                   </div>
                 )}
               </Card>
+              </AnimatedItem>
             );
           })}
         </div>
