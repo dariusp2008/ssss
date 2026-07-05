@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ro">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GRANTED - Ecosistemul tău pentru programe de finanțare</title>
+    <meta name="description" content="GRANTED simplifică procesul de căutare și aplicare pentru programele de finanțare. Efectuează pre-evaluarea companiei, identifică apelurile eligibile și gestionează întreaga aplicație." />
+    <meta property="og:title" content="GRANTED - Ecosistemul tău pentru programe de finanțare" />
+    <meta property="og:description" content="Simplifică aplicațiile pentru programe de finanțare. Pre-scorare, potrivire și gestionare a aplicațiilor într-un singur loc." />
+    <meta property="og:type" content="website" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+      (function() {
+        var consent = localStorage.getItem('granted_analytics_consent');
+        if (consent === 'accepted') {
+          var s = document.createElement('script');
+          s.async = true;
+          s.src = 'https://www.googletagmanager.com/gtag/js?id=G-6ZNQX84GX2';
+          document.head.appendChild(s);
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          window.gtag = gtag;
+          gtag('js', new Date());
+          gtag('config', 'G-6ZNQX84GX2');
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
