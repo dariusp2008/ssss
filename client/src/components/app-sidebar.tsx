@@ -104,7 +104,7 @@ export function AppSidebar() {
   return (
     <Sidebar variant="floating" collapsible="icon">
       <SidebarHeader className="p-3">
-        <div className="flex items-center justify-between gap-2 group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:gap-1">
+        <div className="relative flex items-center justify-center gap-2 group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:gap-1">
           <Link href="/dashboard" onClick={handleNavClick} data-testid="link-logo-home" className="group-data-[collapsible=icon]:hidden">
             <GrantedLogo size="md" variant={logoVariant} />
           </Link>
@@ -112,7 +112,7 @@ export function AppSidebar() {
             onClick={toggleSidebar}
             data-testid="button-sidebar-collapse"
             title="Restrânge / extinde meniul"
-            className="p-2 rounded-md text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors shrink-0"
+            className="absolute right-0 p-2 rounded-md text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors shrink-0 group-data-[collapsible=icon]:static"
           >
             <PanelLeft className="w-4 h-4" />
           </button>

@@ -21,7 +21,7 @@ import {
   Search, Building2, TrendingUp, CheckCircle2, XCircle, ArrowRight,
   FileText, Users, Coins, Briefcase, AlertTriangle, Sparkles, Trash2,
   FileUp, FileMinus, BarChart3, Plus, ShieldCheck, Info, ChevronDown, ChevronUp,
-  ChevronLeft, ChevronRight, ChevronsDown,
+  ChevronLeft, ChevronRight,
   MapPin, Cpu, Brain, ArrowUpDown, RotateCcw,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -543,9 +543,9 @@ export default function DashboardPage() {
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 items-stretch">
           {/* 1 — Companii (white folder) → add a company */}
-          <Card className="flex flex-col items-center justify-between gap-1 p-4 pt-7 min-h-[172px] border-t-2 border-t-chart-1 bg-muted/30 transition-shadow hover:shadow-md" data-testid="card-stat-companies">
+          <Card className="flex flex-col items-center justify-between gap-1 p-4 pt-7 min-h-[172px] border-t-2 border-t-chart-1 transition-shadow hover:shadow-md" data-testid="card-stat-companies">
             <div className="flex-1 flex items-end justify-center">
-              <Folder size={0.7} color="#ffffff" onActivate={() => navigate("/companies")} aria-label="Adaugă o companie" />
+              <Folder size={0.7} color="#CBD5E1" onActivate={() => navigate("/companies")} aria-label="Adaugă o companie" />
             </div>
             <p className="text-2xl font-bold text-foreground" data-testid="text-stat-companies"><CountUp to={stats?.companiesCount ?? 0} duration={1} /></p>
             <p className="text-xs text-muted-foreground text-center">Companii</p>
@@ -585,30 +585,20 @@ export default function DashboardPage() {
           </Card>
 
           {/* 5 — Progres mediu (summary card, no folder) */}
-          <div className="relative">
-            <Card className="flex flex-col justify-between gap-2 p-4 min-h-[172px] border-t-2 border-t-chart-1 rounded-b-none" data-testid="card-stat-avg-progress">
-              <div className="w-9 h-9 rounded-lg bg-[hsl(48,100%,50%)]/15 flex items-center justify-center">
-                <BarChart3 className="w-4 h-4 text-[hsl(48,100%,45%)]" />
-              </div>
-              <div className="space-y-1">
-                <p className="text-2xl font-bold text-foreground" data-testid="text-stat-avg-progress"><CountUp to={stats?.avgProgress ?? 0} duration={1} />%</p>
-                <Progress
-                  value={Math.max(1, stats?.avgProgress ?? 0)}
-                  indicatorStyle={{ backgroundColor: progressBarColor(stats?.avgProgress ?? 0) }}
-                  className="h-1.5"
-                />
-                <p className="text-xs text-muted-foreground">Progres mediu</p>
-              </div>
-            </Card>
-            {/* smaller card attached under the progress card — double chevron */}
-            <div
-              className="absolute left-1/2 top-full z-10 flex w-1/3 -translate-x-1/2 items-center justify-center rounded-b-lg border border-t-0 border-card-border bg-card py-0.5 shadow-sm"
-              data-testid="tab-progress-more"
-              aria-hidden="true"
-            >
-              <ChevronsDown className="w-4 h-4 text-muted-foreground/70" />
+          <Card className="flex flex-col justify-between gap-2 p-4 min-h-[172px] border-t-2 border-t-chart-1 transition-shadow hover:shadow-md" data-testid="card-stat-avg-progress">
+            <div className="w-9 h-9 rounded-lg bg-[hsl(48,100%,50%)]/15 flex items-center justify-center">
+              <BarChart3 className="w-4 h-4 text-[hsl(48,100%,45%)]" />
             </div>
-          </div>
+            <div className="space-y-1">
+              <p className="text-2xl font-bold text-foreground" data-testid="text-stat-avg-progress"><CountUp to={stats?.avgProgress ?? 0} duration={1} />%</p>
+              <Progress
+                value={Math.max(1, stats?.avgProgress ?? 0)}
+                indicatorStyle={{ backgroundColor: progressBarColor(stats?.avgProgress ?? 0) }}
+                className="h-1.5"
+              />
+              <p className="text-xs text-muted-foreground">Progres mediu</p>
+            </div>
+          </Card>
         </div>
       )}
 
