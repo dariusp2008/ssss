@@ -4,7 +4,36 @@ import type { User } from "@shared/models/auth";
 
 type SafeUser = Omit<User, "passwordHash" | "verificationToken" | "verificationTokenExpiresAt" | "resetPasswordToken" | "resetPasswordExpiresAt">;
 
+// Preview-only auth bypass. When VITE_PREVIEW_AUTH === "true" (e.g. a static
+// Vercel deploy with no backend), useAuth returns this fake user so every
+// authenticated page renders. Never enable in a real environment.
+const PREVIEW_AUTH = import.meta.env.VITE_PREVIEW_AUTH === "true";
+
+const PREVIEW_USER: SafeUser = {
+  id: "preview-user",
+  email: "preview@granted.ro",
+  firstName: "Preview",
+  lastName: "User",
+  role: "super_admin",
+  profileImage: null,
+  emailVerified: true,
+  privacyAcceptedAt: new Date(),
+  consentAiProcessing: true,
+  consentEmailMarketing: false,
+  consentThirdPartySharing: false,
+  subscriptionPlanId: null,
+  creditBalance: 999,
+  stripeCustomerId: null,
+  lastActiveAt: new Date(),
+  createdAt: new Date(),
+  updatedAt: new Date(),
+};
+
 async function fetchUser(): Promise<SafeUser | null> {
+  if (PREVIEW_AUTH) {
+    return PREVIEW_USER;
+  }
+
   const response = await fetch("/api/auth/user", {
     credentials: "include",
   });
