@@ -4,10 +4,14 @@ import type { User } from "@shared/models/auth";
 
 type SafeUser = Omit<User, "passwordHash" | "verificationToken" | "verificationTokenExpiresAt" | "resetPasswordToken" | "resetPasswordExpiresAt">;
 
-// Preview-only auth bypass. When VITE_PREVIEW_AUTH === "true" (e.g. a static
-// Vercel deploy with no backend), useAuth returns this fake user so every
-// authenticated page renders. Never enable in a real environment.
-const PREVIEW_AUTH = import.meta.env.VITE_PREVIEW_AUTH === "true";
+// Preview-only auth bypass. Active when VITE_PREVIEW_AUTH === "true" OR the app
+// runs on a *.vercel.app preview host (static deploy, no backend). In that case
+// useAuth returns a fake user so every authenticated page renders. The custom
+// production domain (granted.ro) never matches, so real deploys are unaffected.
+const PREVIEW_AUTH =
+  import.meta.env.VITE_PREVIEW_AUTH === "true" ||
+  (typeof window !== "undefined" &&
+    window.location.hostname.endsWith(".vercel.app"));
 
 const PREVIEW_USER: SafeUser = {
   id: "preview-user",
