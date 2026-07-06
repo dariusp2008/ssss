@@ -326,3 +326,14 @@
     padding-right: 0.75rem;
   }
 }
+
+/* Dark theme: hardcoded navy-blue text (text-[hsl(228,100%,*)]) is unreadable
+   on the dark background. Remap those literals to the theme foreground so they
+   render near-white. Attribute-substring match avoids escaping the arbitrary
+   Tailwind class name. */
+.dark [class*="text-[hsl(228,100%,19.6%)]"],
+.dark [class*="text-[hsl(228,100%,20%)]"],
+.dark [class*="text-[hsl(228,100%,25%)]"],
+.dark [class*="text-[hsl(228,100%,30%)]"] {
+  color: hsl(var(--foreground)) !important;
+}

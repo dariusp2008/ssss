@@ -72,7 +72,7 @@ const navItems = [
 export function AppSidebar() {
   const [location] = useLocation();
   const { user, logout } = useAuth();
-  const { setOpenMobile, toggleSidebar } = useSidebar();
+  const { setOpenMobile, toggleSidebar, state, setOpen } = useSidebar();
   const { resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
@@ -177,7 +177,11 @@ export function AppSidebar() {
               <Collapsible defaultOpen={settingsActive} className="group/collapsible">
                 <SidebarMenuItem>
                   <CollapsibleTrigger asChild>
-                    <SidebarMenuButton data-testid="button-nav-settings" tooltip="Setări">
+                    <SidebarMenuButton
+                      data-testid="button-nav-settings"
+                      tooltip="Setări"
+                      onClick={() => { if (state === "collapsed") setOpen(true); }}
+                    >
                       <Settings className="w-4 h-4" />
                       <span>Setări</span>
                       <ChevronRight className="ml-auto w-4 h-4 transition-transform group-data-[state=open]/collapsible:rotate-90" />

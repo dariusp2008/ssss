@@ -166,11 +166,13 @@ export default function ProjectsPage() {
               Mergi la Panou de control pentru a verifica o companie și a iniția un proiect nou dintr-un apel de finanțare potrivit.
             </p>
           </div>
-          <Link href="/dashboard">
-            <Button data-testid="button-go-to-dashboard">
-              Mergi la Panou de control <ArrowRight className="w-4 h-4 ml-1" />
-            </Button>
-          </Link>
+          <div className="pt-4">
+            <Link href="/dashboard">
+              <Button data-testid="button-go-to-dashboard">
+                Mergi la Panou de control <ArrowRight className="w-4 h-4 ml-1" />
+              </Button>
+            </Link>
+          </div>
         </Card>
       )}
 

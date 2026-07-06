@@ -5,7 +5,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/use-auth";
-import { SidebarProvider, SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
+import { SidebarProvider, useSidebar } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { GrantedLogo } from "@/components/granted-logo";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -148,7 +148,6 @@ function AuthenticatedLayout() {
         <AppSidebar />
         <div className="flex flex-col flex-1 min-w-0">
           <header className="flex items-center gap-3 p-3 h-14 mx-3 mt-2 border rounded-2xl bg-background/95 backdrop-blur-md shadow-[0_2px_10px_rgba(0,0,0,0.06)]">
-            <SidebarTrigger data-testid="button-sidebar-toggle" />
             <HeaderLogo />
           </header>
           <main className="flex-1 overflow-auto pb-[calc(4.5rem+max(env(safe-area-inset-bottom,0px),4px))] md:pb-0">

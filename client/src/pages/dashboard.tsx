@@ -226,6 +226,7 @@ export default function DashboardPage() {
   const [, navigate] = useLocation();
   const [wizardOpen, setWizardOpen] = useState(false);
   const [docsInsightsOpen, setDocsInsightsOpen] = useState(false);
+  const [emptyCompanyPopupOpen, setEmptyCompanyPopupOpen] = useState(false);
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>("");
   const [searchFilter, setSearchFilter] = useState("");
   const [docsFilter, setDocsFilter] = useState("");
@@ -563,25 +564,24 @@ export default function DashboardPage() {
           {/* 3 — Documente încărcate (green folder) → insights popup */}
           <Card className="flex flex-col items-center justify-between gap-1 p-4 pt-7 min-h-[172px] border-t-2 border-t-chart-1 transition-shadow hover:shadow-md" data-testid="card-stat-documents-uploaded">
             <div className="flex-1 flex items-end justify-center">
-              <Folder size={0.7} color="#22C55E" onActivate={() => setDocsInsightsOpen(true)} aria-label="Vezi detalii documente" />
+              <Folder size={0.7} color="#22C55E" onActivate={() => setEmptyCompanyPopupOpen(true)} aria-label="Vezi detalii documente" />
             </div>
             <p className="text-2xl font-bold text-foreground" data-testid="text-stat-documents-uploaded"><CountUp to={stats?.documentsUploaded ?? 0} duration={1} /></p>
             <p className="text-xs text-muted-foreground text-center">Documente încărcate</p>
           </Card>
 
           {/* 4 — Documente lipsă (red folder) → inactive until a project exists */}
-          <Card className={`flex flex-col items-center justify-between gap-1 p-4 pt-7 min-h-[172px] border-t-2 border-t-chart-1 transition-shadow ${(stats?.projectsCount ?? 0) === 0 ? "opacity-70" : "hover:shadow-md"}`} data-testid="card-stat-documents-missing">
+          <Card className="flex flex-col items-center justify-between gap-1 p-4 pt-7 min-h-[172px] border-t-2 border-t-chart-1 transition-shadow hover:shadow-md" data-testid="card-stat-documents-missing">
             <div className="flex-1 flex items-end justify-center">
               <Folder
                 size={0.7}
                 color="#EF4444"
-                disabled={(stats?.projectsCount ?? 0) === 0}
-                onActivate={() => navigate("/projects")}
-                aria-label={(stats?.projectsCount ?? 0) === 0 ? "Creează un proiect întâi" : "Vezi documentele lipsă"}
+                onActivate={() => setEmptyCompanyPopupOpen(true)}
+                aria-label="Vezi documentele lipsă"
               />
             </div>
             <p className="text-2xl font-bold text-foreground" data-testid="text-stat-documents-missing"><CountUp to={stats?.documentsMissing ?? 0} duration={1} /></p>
-            <p className="text-xs text-muted-foreground text-center">{(stats?.projectsCount ?? 0) === 0 ? "Creează un proiect întâi" : "Documente lipsă"}</p>
+            <p className="text-xs text-muted-foreground text-center">Documente lipsă</p>
           </Card>
 
           {/* 5 — Progres mediu (summary card, no folder) */}
@@ -911,6 +911,29 @@ export default function DashboardPage() {
           isSubmitting={matchSurvey.isSubmitting}
         />
       )}
+
+      {/* Placeholder popup for folder cards until backend data is wired in. */}
+      <Dialog open={emptyCompanyPopupOpen} onOpenChange={setEmptyCompanyPopupOpen}>
+        <DialogContent className="max-w-md" data-testid="dialog-empty-company">
+          <DialogHeader>
+            <DialogTitle className="font-serif flex items-center gap-2">
+              <Building2 className="w-5 h-5 text-[hsl(48,100%,45%)]" />
+              Nu ai nicio companie adăugată
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Adaugă o companie pentru a vedea documentele și a iniția proiecte.
+            </p>
+            <Link href="/companies">
+              <Button className="w-full" onClick={() => setEmptyCompanyPopupOpen(false)} data-testid="button-empty-company-add">
+                <Plus className="w-4 h-4 mr-2" />
+                Adaugă companie
+              </Button>
+            </Link>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Real create-project wizard (opened by the blue folder card) */}
       <CreateProjectWizard open={wizardOpen} onOpenChange={setWizardOpen} companies={companies} />
